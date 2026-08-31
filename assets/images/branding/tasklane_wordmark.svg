@@ -1,0 +1,15 @@
+<svg width="1200" height="320" viewBox="0 0 1200 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="road" x1="28" y1="267" x2="253" y2="42" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#5148E5"/>
+    <stop offset=".55" stop-color="#6C63FF"/>
+    <stop offset="1" stop-color="#4F8EF7"/>
+  </linearGradient>
+</defs>
+<path d="M44 269C64 216 86 179 115 146C145 112 184 84 245 52C208 99 189 135 181 170C172 209 176 237 188 269H44Z" fill="url(#road)"/>
+<path d="M108 242C117 216 123 194 134 171M145 153C153 138 163 125 175 112M185 101C192 94 199 88 207 82" stroke="white" stroke-width="8" stroke-linecap="round"/>
+<circle cx="239" cy="57" r="31" fill="#2563EB"/>
+<path d="M225 57L235 67L253 46" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="305" y="145" font-family="Inter, Arial, Helvetica, sans-serif" font-size="92" font-weight="750" fill="#1E1E2D">TaskLane</text>
+<text x="310" y="203" font-family="Inter, Arial, Helvetica, sans-serif" font-size="28" font-weight="600" letter-spacing="4" fill="#74788D">PLAN. TRACK. COMPLETE.</text>
+</svg>
