@@ -5,6 +5,10 @@ import '../../core/app_assets.dart';
 import '../../core/app_colors.dart';
 import '../../widgets/screen_background.dart';
 import '../../widgets/primary_button.dart';
+import 'sign_up_screen.dart';
+
+import '../../widgets/custom_text_field.dart';   //New import for custom
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -110,38 +114,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 36),
 
-                  TextFormField(
+                  CustomTextField(
                     controller: _emailController,
+                    labelText: 'Email',
+                    hintText: 'Enter your email',
+                    prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
                     validator: _validateEmail,
                   ),
 
                   const SizedBox(height: 18),
 
-                  TextFormField(
+                  CustomTextField(
                     controller: _passwordController,
+                    labelText: 'Password',
+                    hintText: 'Enter your password',
+                    prefixIcon: Icons.lock_outline_rounded,
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                      suffixIcon: IconButton(
-                        onPressed: _togglePasswordVisibility,
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
+                    validator: _validatePassword,
+                    suffixIcon: IconButton(
+                      onPressed: _togglePasswordVisibility,
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
                       ),
                     ),
-                    validator: _validatePassword,
                   ),
 
                   const SizedBox(height: 10),
@@ -150,9 +150,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // Password recovery screen comes later.
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                            const ForgotPasswordScreen(),
+                          ),
+                        );
                       },
-                      child: const Text('Forgot password?'),
+                      child: const Text(
+                        'Forgot password?',
+                      ),
                     ),
                   ),
 
@@ -172,7 +180,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       TextButton(
                         onPressed: () {
-                          // Sign-up screen comes next.
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                              const SignUpScreen(),
+                            ),
+                          );
                         },
                         child: const Text('Create account'),
                       ),
