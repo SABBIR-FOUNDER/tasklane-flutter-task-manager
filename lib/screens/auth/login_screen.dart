@@ -10,6 +10,10 @@ import 'sign_up_screen.dart';
 import '../../widgets/custom_text_field.dart';   //New import for custom
 import 'forgot_password_screen.dart';
 
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -50,16 +54,27 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _onTapLogin() {
+  void _onTapLogin() async {
     if (_formKey.currentState!.validate()) {
-      final String email = _emailController.text.trim();
-      final String password = _passwordController.text;
+      final email =
+      _emailController.text.trim();
 
-      debugPrint('Email: $email');
-      debugPrint('Password : ${password.isNotEmpty}');
+      final password =
+          _passwordController.text;
+
+      final success =
+      await context
+          .read<AuthProvider>()
+          .login(
+        email,
+        password,
+      );
+
+      if (success) {
+        debugPrint('Login successful');
+      }
     }
   }
-
   @override
   void dispose() {
     _emailController.dispose();
@@ -166,7 +181,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 12),
 
-                  PrimaryButton(text: 'Login', onPressed: _onTapLogin),
+                  Consumer<AuthProvider>(
+                    builder: (
+                        context,
+                        authProvider,
+                        child,
+                        ) {
+                      return PrimaryButton(
+                        text: 'Login',
+                        isLoading:
+                        authProvider.isLoading,
+                        onPressed:
+                        _onTapLogin,
+                      );
+                    },
+                  ),
 
                   const SizedBox(height: 24),
 

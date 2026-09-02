@@ -1,22 +1,27 @@
-import '../core/network/api_client.dart';
+import 'package:flutter/foundation.dart';
 
+import '../core/network/api_client.dart';
+import '../models/login_response_model.dart';
 
 class AuthService {
-  final ApiClient _apiClient =
-  ApiClient();
+  final ApiClient _apiClient = ApiClient();
 
-  Future<dynamic> login(
+  Future<LoginResponseModel> login(
       String email,
       String password,
       ) async {
-
-    return await _apiClient.post(
+    final response = await _apiClient.post(
       '/login',
       {
-
-        'email':email,
-        'password':password,
+        'email': email,
+        'password': password,
       },
+    );
+
+    debugPrint(response.toString());
+
+    return LoginResponseModel.fromJson(
+      response,
     );
   }
 }
