@@ -30,8 +30,8 @@ class ApiClient {
       String endpoint,
       ) async {
 
-    final token =
-    await StorageService.getToken();
+    final String token =
+        await StorageService.getToken() ?? '';
 
     final response =
     await http.get(
@@ -39,11 +39,8 @@ class ApiClient {
         '${ApiConstants.baseUrl}$endpoint',
       ),
       headers: {
-        'Content-Type':
-        'application/json',
-
-        'Authorization':
-        'Bearer $token',
+        'Content-Type': 'application/json',
+        'token': token,
       },
     );
 

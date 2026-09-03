@@ -6,12 +6,21 @@ import 'providers/auth_provider.dart';
 
 import 'providers/profile_provider.dart';
 
+import 'providers/task_provider.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
+
+
       MultiProvider(
         providers: [
+          ChangeNotifierProvider(
+            create: (_) =>
+                TaskProvider(),
+          ),
+
           ChangeNotifierProvider(
             create: (_) => AuthProvider(),
           ),

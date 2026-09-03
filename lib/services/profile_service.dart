@@ -1,5 +1,6 @@
 import '../core/network/api_client.dart';
 import '../models/profile_model.dart';
+import 'package:flutter/foundation.dart';
 
 class ProfileService {
 
@@ -15,8 +16,15 @@ class ProfileService {
     );
 
 
-    return ProfileModel.fromJson(
-      response['data'],
+    debugPrint(
+      response.toString(),
     );
+
+
+    return ProfileModel.fromJson(
+      response['data'][0],
+    );
+
   }
+
 }
