@@ -16,7 +16,7 @@ class TaskLaneApp extends StatelessWidget {
       title: 'TaskLane',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }

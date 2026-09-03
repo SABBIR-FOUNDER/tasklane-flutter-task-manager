@@ -8,6 +8,12 @@ import '../../widgets/screen_background.dart';
 
 import '../../widgets/custom_text_field.dart';
 
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
+
+import 'login_screen.dart';
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({
     super.key,
@@ -18,17 +24,23 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final TextEditingController _nameController= TextEditingController();
+  final TextEditingController _firstNameController =
+  TextEditingController();
+
+  final TextEditingController _lastNameController =
+  TextEditingController();
 
   final TextEditingController _emailController =
-      TextEditingController();
+  TextEditingController();
+
+  final TextEditingController _mobileController =
+  TextEditingController();
 
   final TextEditingController _passwordController =
-      TextEditingController();
+  TextEditingController();
 
   final TextEditingController _confirmPasswordController =
-      TextEditingController();
-
+  TextEditingController();
   final GlobalKey<FormState> _formKey =       //Signup form
       GlobalKey<FormState>();
 
@@ -37,20 +49,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscureConfirmPassword = true;   //2 password box hide or show 🤗
 
 
-  String? _validateName(String? value) {
+  String? _validateFirstName(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your name';
-    }
-
-    if (value.trim().length < 2) {
-      return 'Please enter a valid name';
+      return 'Please enter your first name';
     }
 
     return null;
+  }
+  String? _validateLastName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your last name';
+    }
 
-
+    return null;
   }
 
+  String? _validateMobile(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your mobile number';
+    }
+
+    if (value.length < 10) {
+      return 'Please enter a valid mobile number';
+    }
+
+    return null;
+  }
 
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -102,31 +126,62 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
 
-  void _onTapSignUp() {
+  void _onTapSignUp() async {
+
     if (_formKey.currentState!.validate()) {
-      final String name =
-      _nameController.text.trim();
 
-      final String email =
-      _emailController.text.trim();
+      final data = {
+        "email":
+        _emailController.text.trim(),
 
-      debugPrint('Name: $name');
-      debugPrint('Email: $email');
-      debugPrint(
-        'Password entered: ${_passwordController.text.isNotEmpty}',
+        "firstName":
+        _firstNameController.text.trim(),
+
+        "lastName":
+        _lastNameController.text.trim(),
+
+        "mobile":
+        _mobileController.text.trim(),
+
+        "password":
+        _passwordController.text,
+      };
+
+
+      final success =
+      await context
+          .read<AuthProvider>()
+          .register(
+        data,
       );
+
+
+      if (success && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+            const LoginScreen(),
+          ),
+        );
+      }
+
     }
+
+  }
 
     @override
-    void dispose(){
-      _nameController.dispose();
+    void dispose() {
+      _firstNameController.dispose();
+      _lastNameController.dispose();
       _emailController.dispose();
+      _mobileController.dispose();
       _passwordController.dispose();
       _confirmPasswordController.dispose();
-      super.dispose();
 
+      super.dispose();
     }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -188,13 +243,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 32),
 
                   CustomTextField(
-                    controller: _nameController,
-                    labelText: 'Full Name',
-                    hintText: 'Enter your name',
-                    prefixIcon: Icons.person_outline_rounded,
-                    textCapitalization: TextCapitalization.words,
-                    validator: _validateName,
+                    controller: _firstNameController,
+                    labelText: 'First Name',
+                    hintText: 'Enter your first name',
+                    prefixIcon: Icons.person_outline,
+                    textCapitalization:
+                    TextCapitalization.words,
+                    validator:
+                    _validateFirstName,
                   ),
+
+
+                  CustomTextField(
+                    controller: _lastNameController,
+                    labelText: 'Last Name',
+                    hintText: 'Enter your last name',
+                    prefixIcon: Icons.person_outline,
+                    textCapitalization:
+                    TextCapitalization.words,
+                    validator:
+                    _validateLastName,
+                  ),
+
+
 
                   const SizedBox(height: 18),
 
@@ -211,6 +282,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextInputAction.next,
                     validator:
                     _validateEmail,
+                  ),
+
+                  CustomTextField(
+                    controller: _mobileController,
+                    labelText: 'Mobile Number',
+                    hintText: 'Enter your mobile number',
+                    prefixIcon:
+                    Icons.phone_android_outlined,
+                    keyboardType:
+                    TextInputType.phone,
+                    validator:
+                    _validateMobile,
                   ),
 
                   const SizedBox(height: 18),

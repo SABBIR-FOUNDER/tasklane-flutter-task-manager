@@ -4,18 +4,24 @@ import 'package:provider/provider.dart';
 import 'app.dart';
 import 'providers/auth_provider.dart';
 
+import 'providers/profile_provider.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(),
-        ),
-      ],
-      child: const TaskLaneApp(),
-    ),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (_) => AuthProvider(),
+          ),
+
+          ChangeNotifierProvider(
+            create: (_) => ProfileProvider(),
+          ),
+        ],
+        child: const TaskLaneApp(),
+      )
   );
 }
 

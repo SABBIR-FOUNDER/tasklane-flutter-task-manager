@@ -1,43 +1,46 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StorageService {
+  StorageService._();
 
-  static const String tokenKey =
+  static const String _tokenKey =
       'auth_token';
 
-
-  Future<void> saveToken(
+  static Future<void> saveToken(
       String token,
       ) async {
-
     final prefs =
     await SharedPreferences.getInstance();
 
     await prefs.setString(
-      tokenKey,
+      _tokenKey,
       token,
     );
   }
 
-
-  Future<String?> getToken() async {
-
+  static Future<String?> getToken() async {
     final prefs =
     await SharedPreferences.getInstance();
 
     return prefs.getString(
-      tokenKey,
+      _tokenKey,
     );
   }
 
-
-  Future<void> clearToken() async {
-
+  static Future<void> removeToken() async {
     final prefs =
     await SharedPreferences.getInstance();
 
     await prefs.remove(
-      tokenKey,
+      _tokenKey,
     );
+  }
+
+  static Future<bool> isLoggedIn() async {
+    final token =
+    await getToken();
+
+    return token != null &&
+        token.isNotEmpty;
   }
 }

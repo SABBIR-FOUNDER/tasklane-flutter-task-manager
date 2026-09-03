@@ -8,8 +8,10 @@ class ApiConstants {
       '/login';
 
   static const String register =
-      '/register';
+      '/Registration';
 
+  static const String profileDetails =
+      '/ProfileDetails';
 
   static const String forgotPassword =
       '/forgot-password';
@@ -22,4 +24,23 @@ class ApiConstants {
   static const String resetPassword =
       '/reset-password';
 
+
+
+  static const String createTask =
+      '/createTask';
+
+  static const String deleteTask =
+      '/deleteTask';
+
+  static const String updateTaskStatus =
+      '/updateTaskStatus';
+
+  static const String listTaskByStatus =
+      '/listTaskByStatus';
+
+  static const String taskStatusCount =
+      '/taskStatusCount';
+
+
 }
+

@@ -3,11 +3,66 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/app_assets.dart';
 import '../../core/app_colors.dart';
+import '../dashboard/dashboard_screen.dart';
+import 'login_screen.dart';
+import '../../services/storage_service.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({
     super.key,
   });
+
+  @override
+  State<SplashScreen> createState() =>
+      _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+
+    _checkAuthentication();
+  }
+
+
+  Future<void> _checkAuthentication() async {
+
+    await Future.delayed(
+      const Duration(seconds: 2),
+    );
+
+    final loggedIn =
+    await StorageService.isLoggedIn();
+
+
+    if (!mounted) return;
+
+
+    if (loggedIn) {
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+          const DashboardScreen(),
+        ),
+      );
+
+    } else {
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+          const LoginScreen(),
+        ),
+      );
+
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +91,7 @@ class SplashScreen extends StatelessWidget {
                       height: 130,
                     ),
 
-                    const SizedBox(
-                      height: 24,
-                    ),
+                    const SizedBox(height: 24),
 
                     const Text(
                       'TaskLane',
@@ -50,9 +103,7 @@ class SplashScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 8,
-                    ),
+                    const SizedBox(height: 8),
 
                     const Text(
                       'Plan. Track. Complete.',
@@ -64,9 +115,7 @@ class SplashScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 44,
-                    ),
+                    const SizedBox(height: 44),
 
                     const SizedBox(
                       width: 28,

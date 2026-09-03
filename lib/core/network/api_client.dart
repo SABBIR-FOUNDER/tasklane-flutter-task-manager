@@ -4,6 +4,11 @@ import 'package:http/http.dart' as http;
 
 import '../constants/api_constants.dart';
 
+import '../../services/storage_service.dart';
+
+
+
+
 class ApiClient {
   Future<dynamic> post(
       String endpoint,
@@ -21,7 +26,29 @@ class ApiClient {
 
     return _handleResponse(response);
   }
+  Future<dynamic> get(
+      String endpoint,
+      ) async {
 
+    final token =
+    await StorageService.getToken();
+
+    final response =
+    await http.get(
+      Uri.parse(
+        '${ApiConstants.baseUrl}$endpoint',
+      ),
+      headers: {
+        'Content-Type':
+        'application/json',
+
+        'Authorization':
+        'Bearer $token',
+      },
+    );
+
+    return _handleResponse(response);
+  }
   dynamic _handleResponse(
       http.Response response,
       ) {

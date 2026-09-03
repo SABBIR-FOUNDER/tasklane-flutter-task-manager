@@ -1,7 +1,6 @@
-import 'package:flutter/foundation.dart';
-
 import '../core/network/api_client.dart';
 import '../models/login_response_model.dart';
+import '../models/register_response_model.dart';
 
 class AuthService {
   final ApiClient _apiClient = ApiClient();
@@ -18,10 +17,18 @@ class AuthService {
       },
     );
 
-    debugPrint(response.toString());
+    return LoginResponseModel.fromJson(response);
+  }
 
-    return LoginResponseModel.fromJson(
-      response,
+
+  Future<RegisterResponseModel> register(
+      Map<String, dynamic> data,
+      ) async {
+    final response = await _apiClient.post(
+      '/Registration',
+      data,
     );
+
+    return RegisterResponseModel.fromJson(response);
   }
 }

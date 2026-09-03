@@ -14,6 +14,11 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
+import '../dashboard/dashboard_screen.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -55,12 +60,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onTapLogin() async {
+
     if (_formKey.currentState!.validate()) {
+
       final email =
       _emailController.text.trim();
 
       final password =
           _passwordController.text;
+
 
       final success =
       await context
@@ -70,10 +78,21 @@ class _LoginScreenState extends State<LoginScreen> {
         password,
       );
 
-      if (success) {
-        debugPrint('Login successful');
+
+      if (success && mounted) {
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+            const DashboardScreen(),
+          ),
+        );
+
       }
+
     }
+
   }
   @override
   void dispose() {
