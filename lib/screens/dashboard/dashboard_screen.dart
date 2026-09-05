@@ -11,13 +11,18 @@ import '../../providers/task_provider.dart';
 import '../../widgets/dashboard_header.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/task_card.dart';
+
 import '../task/create_task_screen.dart';
 import '../task/task_list_screen.dart';
 
-class DashboardScreen
-    extends StatefulWidget {
+class DashboardScreen extends StatefulWidget {
+  final VoidCallback? onCreateTask;
+  final ValueChanged<String>? onOpenTasks;
+
   const DashboardScreen({
     super.key,
+    this.onCreateTask,
+    this.onOpenTasks,
   });
 
   @override
@@ -48,31 +53,47 @@ class _DashboardScreenState
 
     await Future.wait([
       profileProvider.loadProfile(),
+      taskProvider.loadTaskCount(),
       taskProvider.loadTasks(
         TaskStatus.newTask,
       ),
-      taskProvider.loadTaskCount(),
+      taskProvider.loadTasks(
+        TaskStatus.inProgress,
+      ),
+      taskProvider.loadTasks(
+        TaskStatus.completed,
+      ),
+      taskProvider.loadTasks(
+        TaskStatus.cancelled,
+      ),
     ]);
   }
 
   Future<void> _openCreateTask() async {
-    final created =
-        await Navigator.push<bool>(
+    if (widget.onCreateTask != null) {
+      widget.onCreateTask!();
+      return;
+    }
+
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) =>
             const CreateTaskScreen(),
       ),
     );
-
-    if (created == true && mounted) {
-      await _loadDashboard();
-    }
   }
 
   void _openStatus(
     String status,
   ) {
+    if (widget.onOpenTasks != null) {
+      widget.onOpenTasks!(
+        status,
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -92,7 +113,8 @@ class _DashboardScreenState
         context.read<TaskProvider>();
 
     final success =
-        await provider.updateTaskStatus(
+        await provider
+            .updateTaskStatus(
       task.id,
       newStatus,
       fromStatus: task.status,
@@ -107,12 +129,16 @@ class _DashboardScreenState
       SnackBar(
         content: Text(
           success
-              ? 'Task moved to $newStatus'
+              ? 'Task updated to $newStatus'
               : provider.error ??
                   'Unable to update task',
         ),
       ),
     );
+
+    if (success) {
+      _loadDashboard();
+    }
   }
 
   Future<void> _deleteTask(
@@ -121,12 +147,15 @@ class _DashboardScreenState
     final confirmed =
         await showDialog<bool>(
       context: context,
-      builder: (dialogContext) {
+      builder: (
+        dialogContext,
+      ) {
         return AlertDialog(
-          title:
-              const Text('Delete task?'),
+          title: const Text(
+            'Delete task?',
+          ),
           content: Text(
-            'Delete "${task.title}"?',
+            '"${task.title}" will be permanently removed.',
           ),
           actions: [
             TextButton(
@@ -137,7 +166,9 @@ class _DashboardScreenState
                 );
               },
               child:
-                  const Text('Cancel'),
+                  const Text(
+                'Cancel',
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -146,8 +177,15 @@ class _DashboardScreenState
                   true,
                 );
               },
+              style:
+                  TextButton.styleFrom(
+                foregroundColor:
+                    AppColors.danger,
+              ),
               child:
-                  const Text('Delete'),
+                  const Text(
+                'Delete',
+              ),
             ),
           ],
         );
@@ -183,6 +221,82 @@ class _DashboardScreenState
         ),
       ),
     );
+
+    if (success) {
+      _loadDashboard();
+    }
+  }
+
+  List<TaskModel> _allTasks(
+    TaskProvider provider,
+  ) {
+    final tasks = <TaskModel>[
+      ...provider.tasksFor(
+        TaskStatus.newTask,
+      ),
+      ...provider.tasksFor(
+        TaskStatus.inProgress,
+      ),
+      ...provider.tasksFor(
+        TaskStatus.completed,
+      ),
+      ...provider.tasksFor(
+        TaskStatus.cancelled,
+      ),
+    ];
+
+    tasks.sort(
+      (a, b) => _sortDate(
+        b,
+      ).compareTo(
+        _sortDate(a),
+      ),
+    );
+
+    return tasks;
+  }
+
+  DateTime _sortDate(
+    TaskModel task,
+  ) {
+    return task.createdDate ??
+        DateTime.fromMillisecondsSinceEpoch(
+          0,
+        );
+  }
+
+  String? _firstDashboardError(
+    TaskProvider provider,
+  ) {
+    return provider.errorFor(
+          TaskStatus.newTask,
+        ) ??
+        provider.errorFor(
+          TaskStatus.inProgress,
+        ) ??
+        provider.errorFor(
+          TaskStatus.completed,
+        ) ??
+        provider.errorFor(
+          TaskStatus.cancelled,
+        );
+  }
+
+  bool _isLoadingAny(
+    TaskProvider provider,
+  ) {
+    return provider.isLoadingStatus(
+          TaskStatus.newTask,
+        ) ||
+        provider.isLoadingStatus(
+          TaskStatus.inProgress,
+        ) ||
+        provider.isLoadingStatus(
+          TaskStatus.completed,
+        ) ||
+        provider.isLoadingStatus(
+          TaskStatus.cancelled,
+        );
   }
 
   @override
@@ -190,206 +304,242 @@ class _DashboardScreenState
     BuildContext context,
   ) {
     return Scaffold(
-      appBar: AppBar(
-        title:
-            const Text('TaskLane'),
-      ),
-      floatingActionButton:
-          FloatingActionButton.extended(
-        onPressed: _openCreateTask,
-        icon: SvgPicture.asset(
-          AppAssets.addTask,
-          width: 22,
-          height: 22,
-        ),
-        label:
-            const Text('New Task'),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadDashboard,
-        child: Consumer2<
-            ProfileProvider,
-            TaskProvider>(
-          builder: (
-            context,
-            profileProvider,
-            taskProvider,
-            child,
-          ) {
-            final newTasks =
-                taskProvider.tasksFor(
-              TaskStatus.newTask,
-            );
+      backgroundColor:
+          AppColors.background,
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: _loadDashboard,
+          child: Consumer2<
+              ProfileProvider,
+              TaskProvider>(
+            builder: (
+              context,
+              profileProvider,
+              taskProvider,
+              child,
+            ) {
+              final count =
+                  taskProvider.count;
 
-            final newTasksError =
-                taskProvider.errorFor(
-              TaskStatus.newTask,
-            );
+              final totalTasks =
+                  (count?.newTask ?? 0) +
+                      (count?.inProgressTask ??
+                          0) +
+                      (count?.completedTask ??
+                          0) +
+                      (count?.cancelledTask ??
+                          0);
 
-            final count =
-                taskProvider.count;
+              final activeTasks =
+                  (count?.newTask ?? 0) +
+                      (count?.inProgressTask ??
+                          0);
 
-            return ListView(
-              physics:
-                  const AlwaysScrollableScrollPhysics(),
-              padding:
-                  const EdgeInsets.all(20),
-              children: [
-                DashboardHeader(
-                  name: profileProvider
-                          .profile
-                          ?.firstName ??
-                      'User',
+              final allTasks =
+                  _allTasks(
+                taskProvider,
+              );
+
+              final dashboardError =
+                  _firstDashboardError(
+                taskProvider,
+              );
+
+              return ListView(
+                physics:
+                    const AlwaysScrollableScrollPhysics(),
+                padding:
+                    const EdgeInsets.fromLTRB(
+                  14,
+                  12,
+                  14,
+                  24,
                 ),
-                const SizedBox(
-                  height: 24,
-                ),
-                const Text(
-                  'Task Overview',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight:
-                        FontWeight.w700,
-                    color: AppColors
-                        .textPrimary,
+                children: [
+                  DashboardHeader(
+                    name: profileProvider
+                            .profile
+                            ?.firstName ??
+                        'there',
+                    totalTasks:
+                        totalTasks,
+                    activeTasks:
+                        activeTasks,
+                    onCreateTask:
+                        _openCreateTask,
                   ),
-                ),
-                const SizedBox(
-                  height: 14,
-                ),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.55,
-                  children: [
-                    _statusCard(
-                      title: 'New',
-                      value:
-                          count?.newTask ??
-                              0,
-                      status:
-                          TaskStatus.newTask,
-                      iconAsset:
-                          AppAssets.newTask,
-                      accentColor:
-                          AppColors.primary,
-                    ),
-                    _statusCard(
-                      title: 'In Progress',
-                      value: count
-                              ?.inProgressTask ??
-                          0,
-                      status: TaskStatus
-                          .inProgress,
-                      iconAsset: AppAssets
-                          .progressTask,
-                      accentColor:
-                          Colors.orange,
-                    ),
-                    _statusCard(
-                      title: 'Completed',
-                      value: count
-                              ?.completedTask ??
-                          0,
-                      status: TaskStatus
-                          .completed,
-                      iconAsset: AppAssets
-                          .completedTask,
-                      accentColor:
-                          AppColors.success,
-                    ),
-                    _statusCard(
-                      title: 'Cancelled',
-                      value: count
-                              ?.cancelledTask ??
-                          0,
-                      status: TaskStatus
-                          .cancelled,
-                      iconAsset: AppAssets
-                          .cancelledTask,
-                      accentColor:
-                          AppColors.danger,
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 28,
-                ),
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'New Tasks',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight:
-                              FontWeight.w700,
-                          color: AppColors
-                              .textPrimary,
+                  const SizedBox(
+                    height: 24,
+                  ),
+                  const _SectionHeading(
+                    title:
+                        'Task overview',
+                    subtitle:
+                        'Your workflow at a glance',
+                  ),
+                  const SizedBox(
+                    height: 13,
+                  ),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics:
+                        const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.72,
+                    children: [
+                      _statusCard(
+                        title: 'New',
+                        value:
+                            count?.newTask ??
+                                0,
+                        status:
+                            TaskStatus
+                                .newTask,
+                        iconAsset:
+                            AppAssets
+                                .newTask,
+                        accentColor:
+                            AppColors
+                                .newTask,
+                        isLoading:
+                            taskProvider
+                                .isCountLoading,
+                      ),
+                      _statusCard(
+                        title:
+                            'In Progress',
+                        value: count
+                                ?.inProgressTask ??
+                            0,
+                        status:
+                            TaskStatus
+                                .inProgress,
+                        iconAsset:
+                            AppAssets
+                                .progressTask,
+                        accentColor:
+                            AppColors
+                                .progress,
+                        isLoading:
+                            taskProvider
+                                .isCountLoading,
+                      ),
+                      _statusCard(
+                        title:
+                            'Completed',
+                        value: count
+                                ?.completedTask ??
+                            0,
+                        status:
+                            TaskStatus
+                                .completed,
+                        iconAsset:
+                            AppAssets
+                                .completedTask,
+                        accentColor:
+                            AppColors
+                                .success,
+                        isLoading:
+                            taskProvider
+                                .isCountLoading,
+                      ),
+                      _statusCard(
+                        title:
+                            'Cancelled',
+                        value: count
+                                ?.cancelledTask ??
+                            0,
+                        status:
+                            TaskStatus
+                                .cancelled,
+                        iconAsset:
+                            AppAssets
+                                .cancelledTask,
+                        accentColor:
+                            AppColors
+                                .danger,
+                        isLoading:
+                            taskProvider
+                                .isCountLoading,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 25,
+                  ),
+                  Row(
+                    crossAxisAlignment:
+                        CrossAxisAlignment
+                            .end,
+                    children: [
+                      const Expanded(
+                        child:
+                            _SectionHeading(
+                          title:
+                              'All tasks',
+                          subtitle:
+                              'Showing the latest added tasks first',
                         ),
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        _openStatus(
-                          TaskStatus
-                              .newTask,
-                        );
-                      },
-                      child:
-                          const Text(
-                        'View All',
+                      TextButton(
+                        onPressed: () {
+                          _openStatus(
+                            TaskStatus
+                                .newTask,
+                          );
+                        },
+                        child:
+                            const Text(
+                          'Manage',
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-                if (taskProvider
-                        .isLoadingStatus(
-                      TaskStatus.newTask,
-                    ) &&
-                    newTasks.isEmpty)
-                  const Padding(
-                    padding:
-                        EdgeInsets.symmetric(
-                      vertical: 50,
-                    ),
-                    child: Center(
-                      child:
-                          CircularProgressIndicator(),
-                    ),
-                  )
-                else if (newTasksError !=
-                        null &&
-                    newTasks.isEmpty)
-                  _dashboardMessage(
-                    icon:
-                        AppAssets.noInternet,
-                    title:
-                        'Unable to load tasks',
-                    message:
-                        newTasksError,
-                  )
-                else if (newTasks.isEmpty)
-                  _dashboardMessage(
-                    icon:
-                        AppAssets.emptyTasks,
-                    title: 'No new tasks',
-                    message:
-                        'Create a task and it will appear here.',
-                  )
-                else
-                  ...newTasks
-                      .take(5)
-                      .map(
-                    (task) {
-                      return TaskCard(
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  if (_isLoadingAny(
+                        taskProvider,
+                      ) &&
+                      allTasks.isEmpty)
+                    const _DashboardLoading()
+                  else if (dashboardError !=
+                          null &&
+                      allTasks.isEmpty)
+                    _DashboardMessage(
+                      icon:
+                          AppAssets
+                              .noInternet,
+                      title:
+                          'Could not load tasks',
+                      message:
+                          dashboardError,
+                      actionLabel:
+                          'Try again',
+                      onAction:
+                          _loadDashboard,
+                    )
+                  else if (allTasks.isEmpty)
+                    _DashboardMessage(
+                      icon:
+                          AppAssets
+                              .emptyTasks,
+                      title:
+                          'Your lane is clear',
+                      message:
+                          'Create a new task and it will appear here.',
+                      actionLabel:
+                          'Create task',
+                      onAction:
+                          _openCreateTask,
+                    )
+                  else
+                    ...allTasks.map(
+                      (task) =>
+                          TaskCard(
                         task: task,
                         onStatusChanged:
                             (newStatus) {
@@ -403,15 +553,12 @@ class _DashboardScreenState
                             task,
                           );
                         },
-                      );
-                    },
-                  ),
-                const SizedBox(
-                  height: 90,
-                ),
-              ],
-            );
-          },
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -423,54 +570,184 @@ class _DashboardScreenState
     required String status,
     required String iconAsset,
     required Color accentColor,
+    required bool isLoading,
   }) {
-    return InkWell(
-      borderRadius:
-          BorderRadius.circular(12),
-      onTap: () {
-        _openStatus(status);
-      },
-      child: StatCard(
-        title: title,
-        value: value,
-        iconAsset: iconAsset,
-        accentColor: accentColor,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius:
+            BorderRadius.circular(
+          19,
+        ),
+        onTap: () {
+          _openStatus(
+            status,
+          );
+        },
+        child: StatCard(
+          title: title,
+          value: value,
+          iconAsset:
+              iconAsset,
+          accentColor:
+              accentColor,
+          isLoading:
+              isLoading,
+        ),
       ),
     );
   }
+}
 
-  Widget _dashboardMessage({
-    required String icon,
-    required String title,
-    required String message,
-  }) {
-    return Padding(
+class _SectionHeading
+    extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _SectionHeading({
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style:
+              const TextStyle(
+            fontSize: 19,
+            fontWeight:
+                FontWeight.w800,
+            color:
+                AppColors.textPrimary,
+            letterSpacing:
+                -0.25,
+          ),
+        ),
+        const SizedBox(
+          height: 3,
+        ),
+        Text(
+          subtitle,
+          style:
+              const TextStyle(
+            fontSize: 11.5,
+            color:
+                AppColors
+                    .textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DashboardLoading
+    extends StatelessWidget {
+  const _DashboardLoading();
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Container(
+      height: 92,
+      alignment:
+          Alignment.center,
+      decoration:
+          BoxDecoration(
+        color:
+            AppColors.card,
+        borderRadius:
+            BorderRadius.circular(
+          18,
+        ),
+        border:
+            Border.all(
+          color:
+              AppColors.border,
+        ),
+      ),
+      child:
+          const CircularProgressIndicator(),
+    );
+  }
+}
+
+class _DashboardMessage
+    extends StatelessWidget {
+  final String icon;
+  final String title;
+  final String message;
+  final String actionLabel;
+  final Future<void> Function()
+      onAction;
+
+  const _DashboardMessage({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Container(
       padding:
-          const EdgeInsets.symmetric(
-        vertical: 36,
+          const EdgeInsets.fromLTRB(
+        20,
+        22,
+        20,
+        18,
+      ),
+      decoration:
+          BoxDecoration(
+        color:
+            AppColors.card,
+        borderRadius:
+            BorderRadius.circular(
+          18,
+        ),
+        border:
+            Border.all(
+          color:
+              AppColors.border,
+        ),
       ),
       child: Column(
         children: [
           SvgPicture.asset(
             icon,
-            height: 110,
+            height: 88,
           ),
           const SizedBox(
-            height: 16,
+            height: 12,
           ),
           Text(
             title,
+            textAlign:
+                TextAlign.center,
             style:
                 const TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight:
-                  FontWeight.w600,
-              color: AppColors
-                  .textPrimary,
+                  FontWeight.w800,
+              color:
+                  AppColors
+                      .textPrimary,
             ),
           ),
           const SizedBox(
-            height: 6,
+            height: 5,
           ),
           Text(
             message,
@@ -478,8 +755,23 @@ class _DashboardScreenState
                 TextAlign.center,
             style:
                 const TextStyle(
-              color: AppColors
-                  .textSecondary,
+              fontSize: 12,
+              height: 1.4,
+              color:
+                  AppColors
+                      .textSecondary,
+            ),
+          ),
+          const SizedBox(
+            height: 13,
+          ),
+          OutlinedButton(
+            onPressed: () {
+              onAction();
+            },
+            child:
+                Text(
+              actionLabel,
             ),
           ),
         ],

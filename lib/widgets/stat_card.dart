@@ -8,6 +8,7 @@ class StatCard extends StatelessWidget {
   final int value;
   final String? iconAsset;
   final Color accentColor;
+  final bool isLoading;
 
   const StatCard({
     super.key,
@@ -15,67 +16,99 @@ class StatCard extends StatelessWidget {
     required this.value,
     this.iconAsset,
     this.accentColor = AppColors.primary,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            if (iconAsset != null) ...[
-              Container(
-                width: 44,
-                height: 44,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: accentColor.withAlpha(24),
-                  borderRadius:
-                      BorderRadius.circular(12),
-                ),
-                child: SvgPicture.asset(
-                  iconAsset!,
-                ),
-              ),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    value.toString(),
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight:
-                          FontWeight.w800,
-                      color:
-                          AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight:
-                          FontWeight.w600,
-                      color:
-                          AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius:
+            BorderRadius.circular(19),
+        border: Border.all(
+          color: AppColors.border,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x09111827),
+            blurRadius: 14,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(13),
+      child: Row(
+        children: [
+          if (iconAsset != null)
+            SizedBox(
+              width: 38,
+              height: 38,
+              child: SvgPicture.asset(
+                iconAsset!,
               ),
             ),
-          ],
-        ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 2,
+              overflow:
+                  TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.2,
+                fontWeight:
+                    FontWeight.w700,
+                color: accentColor,
+              ),
+            ),
+          ),
+          const SizedBox(width: 7),
+          if (isLoading)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child:
+                  CircularProgressIndicator(
+                strokeWidth: 2,
+              ),
+            )
+          else
+            Column(
+              mainAxisSize:
+                  MainAxisSize.min,
+              crossAxisAlignment:
+                  CrossAxisAlignment.end,
+              children: [
+                Text(
+                  value.toString(),
+                  style: const TextStyle(
+                    fontSize: 25,
+                    height: 1,
+                    fontWeight:
+                        FontWeight.w800,
+                    color:
+                        AppColors.textPrimary,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value == 1
+                      ? 'task'
+                      : 'tasks',
+                  style: const TextStyle(
+                    fontSize: 9.5,
+                    fontWeight:
+                        FontWeight.w500,
+                    color: AppColors
+                        .textSecondary,
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }

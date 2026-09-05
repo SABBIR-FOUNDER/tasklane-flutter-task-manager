@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import '../core/app_assets.dart';
+import '../core/app_colors.dart';
 import '../core/constants/task_status.dart';
+
 import 'dashboard/dashboard_screen.dart';
 import 'profile/profile_screen.dart';
 import 'task/create_task_screen.dart';
 import 'task/task_list_screen.dart';
 
-class MainScreen
-    extends StatefulWidget {
+class MainScreen extends StatefulWidget {
   const MainScreen({
     super.key,
   });
@@ -19,37 +18,58 @@ class MainScreen
       _MainScreenState();
 }
 
-class _MainScreenState
-    extends State<MainScreen> {
-  int _currentIndex = 0;
+class _MainScreenState extends State<MainScreen> {
+  int _selectedNavIndex = 0;
+  String _taskStatus = TaskStatus.newTask;
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    TaskListScreen(
-      status: TaskStatus.newTask,
-    ),
-    SizedBox.shrink(),
-    ProfileScreen(),
-  ];
+  Future<void> _openCreateTask() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            const CreateTaskScreen(),
+      ),
+    );
+  }
 
-  Future<void> _onDestinationSelected(
+  void _openTasks(
+    String status,
+  ) {
+    setState(() {
+      _taskStatus = status;
+      _selectedNavIndex = 1;
+    });
+  }
+
+  void _onDestinationSelected(
     int index,
-  ) async {
+  ) {
     if (index == 2) {
-      await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              const CreateTaskScreen(),
-        ),
-      );
-
+      _openCreateTask();
       return;
     }
 
     setState(() {
-      _currentIndex = index;
+      _selectedNavIndex = index;
     });
+  }
+
+  Widget _currentScreen() {
+    switch (_selectedNavIndex) {
+      case 1:
+        return TaskListScreen(
+          key: ValueKey(_taskStatus),
+          status: _taskStatus,
+        );
+      case 3:
+        return const ProfileScreen();
+      case 0:
+      default:
+        return DashboardScreen(
+          onCreateTask: _openCreateTask,
+          onOpenTasks: _openTasks,
+        );
+    }
   }
 
   @override
@@ -57,69 +77,50 @@ class _MainScreenState
     BuildContext context,
   ) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar:
-          NavigationBar(
-        selectedIndex: _currentIndex,
+      body: _currentScreen(),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex:
+            _selectedNavIndex,
+        backgroundColor:
+            AppColors.card,
+        indicatorColor:
+            AppColors.purpleSoft,
         onDestinationSelected:
             _onDestinationSelected,
-        destinations: [
+        destinations: const [
           NavigationDestination(
-            icon: SvgPicture.asset(
-              AppAssets.home,
-              width: 24,
-              height: 24,
+            icon: Icon(
+              Icons.home_outlined,
             ),
-            selectedIcon:
-                SvgPicture.asset(
-              AppAssets.home,
-              width: 24,
-              height: 24,
+            selectedIcon: Icon(
+              Icons.home_rounded,
             ),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: SvgPicture.asset(
-              AppAssets.details,
-              width: 24,
-              height: 24,
+            icon: Icon(
+              Icons.task_alt_outlined,
             ),
-            selectedIcon:
-                SvgPicture.asset(
-              AppAssets.details,
-              width: 24,
-              height: 24,
+            selectedIcon: Icon(
+              Icons.task_alt_rounded,
             ),
             label: 'Tasks',
           ),
           NavigationDestination(
-            icon: SvgPicture.asset(
-              AppAssets.addTask,
-              width: 24,
-              height: 24,
+            icon: Icon(
+              Icons.add_circle_outline_rounded,
             ),
-            selectedIcon:
-                SvgPicture.asset(
-              AppAssets.addTask,
-              width: 24,
-              height: 24,
+            selectedIcon: Icon(
+              Icons.add_circle_rounded,
             ),
             label: 'Add',
           ),
           NavigationDestination(
-            icon: SvgPicture.asset(
-              AppAssets.profile,
-              width: 24,
-              height: 24,
+            icon: Icon(
+              Icons.person_outline_rounded,
             ),
-            selectedIcon:
-                SvgPicture.asset(
-              AppAssets.profile,
-              width: 24,
-              height: 24,
+            selectedIcon: Icon(
+              Icons.person_rounded,
             ),
             label: 'Profile',
           ),
