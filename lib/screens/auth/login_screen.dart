@@ -4,511 +4,344 @@ import 'package:provider/provider.dart';
 
 import '../../core/app_assets.dart';
 import '../../core/app_colors.dart';
-
 import '../../providers/auth_provider.dart';
-
+import '../../widgets/custom_text_field.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/screen_background.dart';
 
 import '../main_screen.dart';
+import 'forgot_password_screen.dart';
 import 'sign_up_screen.dart';
 
-
-
 class LoginScreen extends StatefulWidget {
-
   const LoginScreen({
     super.key,
   });
 
-
   @override
   State<LoginScreen> createState() =>
       _LoginScreenState();
-
 }
-
-
 
 class _LoginScreenState
     extends State<LoginScreen> {
-
-
   final TextEditingController _emailController =
-  TextEditingController();
-
+      TextEditingController();
 
   final TextEditingController _passwordController =
-  TextEditingController();
-
-
+      TextEditingController();
 
   final GlobalKey<FormState> _formKey =
-  GlobalKey<FormState>();
-
+      GlobalKey<FormState>();
 
   bool _obscurePassword = true;
-
-
   bool _isLoading = false;
 
-
-
-  Future<void> _onTapLogin() async {
-
-
-    if(!_formKey.currentState!.validate()){
-
-      return;
-
+  String? _validateEmail(
+    String? value,
+  ) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your email';
     }
 
+    if (!value.contains('@')) {
+      return 'Please enter a valid email';
+    }
+
+    return null;
+  }
+
+  String? _validatePassword(
+    String? value,
+  ) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your password';
+    }
+
+    return null;
+  }
+
+  Future<void> _onTapLogin() async {
+    FocusScope.of(context).unfocus();
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     setState(() {
-
       _isLoading = true;
-
     });
 
-
-
     try {
-
-
-      await context
-          .read<AuthProvider>()
-          .login(
+      final success =
+          await context
+              .read<AuthProvider>()
+              .login(
         _emailController.text.trim(),
-        _passwordController.text.trim(),
+        _passwordController.text,
       );
 
+      if (!mounted) {
+        return;
+      }
 
+      if (!success) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Login failed. Please check your email and password.',
+            ),
+          ),
+        );
 
-      if(!mounted) return;
+        return;
+      }
 
-
-
-      Navigator.pushReplacement(
-
+      Navigator.pushAndRemoveUntil(
         context,
-
         MaterialPageRoute(
-
           builder: (_) =>
-          const MainScreen(),
-
+              const MainScreen(),
         ),
-
+        (route) => false,
       );
-
-
-
-    } catch(e) {
-
-
-      if(!mounted) return;
-
-
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
-
         SnackBar(
-
-          content:
-
-          Text(
+          content: Text(
             e.toString(),
           ),
-
         ),
-
       );
-
-
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-
-
-
-    if(mounted){
-
-      setState(() {
-
-        _isLoading = false;
-
-      });
-
-    }
-
-
   }
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
-      body:
-
-      ScreenBackground(
-
-        child:
-
-        SafeArea(
-
-          child:
-
-          SingleChildScrollView(
-
-            padding:
-            const EdgeInsets.all(24),
-
-
-
-            child:
-
-            Form(
-
-              key:
-              _formKey,
-
-
-
-              child:
-
-              Column(
-
-                children: [
-
-
-
-                  const SizedBox(
-                    height:40,
+      resizeToAvoidBottomInset: true,
+      body: ScreenBackground(
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (
+              context,
+              constraints,
+            ) {
+              return SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior
+                        .onDrag,
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 24,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight:
+                        constraints.maxHeight -
+                            48,
                   ),
-
-
-
-
-                  SvgPicture.asset(
-
-                    AppAssets.logoMark,
-
-                    width:
-                    100,
-
-                    height:
-                    100,
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:20,
-                  ),
-
-
-
-
-
-                  SvgPicture.asset(
-
-                    AppAssets.authWelcomeRoad,
-
-                    height:
-                    120,
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:25,
-                  ),
-
-
-
-
-
-                  const Text(
-
-                    'Welcome Back',
-
-                    style:
-
-                    TextStyle(
-
-                      fontSize:
-                      30,
-
-                      fontWeight:
-                      FontWeight.bold,
-
-                      color:
-                      AppColors.textPrimary,
-
-                    ),
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:8,
-                  ),
-
-
-
-
-
-                  const Text(
-
-                    'Sign in to manage your tasks',
-
-                    style:
-
-                    TextStyle(
-
-                      color:
-                      AppColors.textSecondary,
-
-                    ),
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:30,
-                  ),
-
-
-
-
-
-                  TextFormField(
-
-                    controller:
-                    _emailController,
-
-
-                    validator:(value){
-
-                      if(value == null ||
-                          value.isEmpty){
-
-                        return 'Enter email';
-
-                      }
-
-                      return null;
-
-                    },
-
-
-                    decoration:
-
-                    const InputDecoration(
-
-                      labelText:
-                      'Email',
-
-                    ),
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:16,
-                  ),
-
-
-
-
-
-                  TextFormField(
-
-                    controller:
-                    _passwordController,
-
-
-                    obscureText:
-                    _obscurePassword,
-
-
-                    validator:(value){
-
-                      if(value == null ||
-                          value.isEmpty){
-
-                        return 'Enter password';
-
-                      }
-
-                      return null;
-
-                    },
-
-
-                    decoration:
-
-                    InputDecoration(
-
-                      labelText:
-                      'Password',
-
-
-
-
-                      suffixIcon:
-
-                      IconButton(
-
-                        onPressed:(){
-
-                          setState((){
-
-                            _obscurePassword =
-                            !_obscurePassword;
-
-                          });
-
-
-                        },
-
-
-
-                        icon:
-
-                        Icon(
-
-                          _obscurePassword
-
-                              ? Icons.visibility
-
-                              : Icons.visibility_off,
-
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment:
+                          MainAxisAlignment
+                              .center,
+                      crossAxisAlignment:
+                          CrossAxisAlignment
+                              .stretch,
+                      children: [
+                        const SizedBox(
+                          height: 14,
                         ),
-
-                      ),
-
-                    ),
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:25,
-                  ),
-
-
-
-
-
-                  PrimaryButton(
-
-                    text:
-                    'Login',
-
-
-                    isLoading:
-                    _isLoading,
-
-
-                    onPressed:
-                    _onTapLogin,
-
-                  ),
-
-
-
-
-
-                  TextButton(
-
-                    onPressed:(){
-
-
-                      Navigator.push(
-
-                        context,
-
-
-                        MaterialPageRoute(
-
-                          builder:(_)=>
-
-                          const SignUpScreen(),
-
+                        Center(
+                          child: SvgPicture.asset(
+                            AppAssets.wordmark,
+                            width: 235,
+                          ),
                         ),
-
-                      );
-
-
-                    },
-
-
-
-                    child:
-
-                    const Text(
-
-                      'Create account',
-
+                        const SizedBox(
+                          height: 42,
+                        ),
+                        const Text(
+                          'Welcome back',
+                          textAlign:
+                              TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight:
+                                FontWeight.w800,
+                            color: AppColors
+                                .textPrimary,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        const Text(
+                          'Sign in and keep moving your tasks forward.',
+                          textAlign:
+                              TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.45,
+                            color: AppColors
+                                .textSecondary,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 32,
+                        ),
+                        CustomTextField(
+                          controller:
+                              _emailController,
+                          labelText: 'Email',
+                          hintText:
+                              'Enter your email',
+                          prefixIcon: Icons
+                              .email_outlined,
+                          keyboardType:
+                              TextInputType
+                                  .emailAddress,
+                          textInputAction:
+                              TextInputAction
+                                  .next,
+                          validator:
+                              _validateEmail,
+                        ),
+                        const SizedBox(
+                          height: 14,
+                        ),
+                        CustomTextField(
+                          controller:
+                              _passwordController,
+                          labelText:
+                              'Password',
+                          hintText:
+                              'Enter your password',
+                          prefixIcon: Icons
+                              .lock_outline_rounded,
+                          obscureText:
+                              _obscurePassword,
+                          textInputAction:
+                              TextInputAction
+                                  .done,
+                          validator:
+                              _validatePassword,
+                          suffixIcon:
+                              IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword =
+                                    !_obscurePassword;
+                              });
+                            },
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons
+                                      .visibility_outlined
+                                  : Icons
+                                      .visibility_off_outlined,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        Align(
+                          alignment:
+                              Alignment
+                                  .centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const ForgotPasswordScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              'Forgot password?',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        PrimaryButton(
+                          text: 'Login',
+                          isLoading:
+                              _isLoading,
+                          onPressed:
+                              _onTapLogin,
+                        ),
+                        const SizedBox(
+                          height: 16,
+                        ),
+                        Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment
+                                  .center,
+                          children: [
+                            const Text(
+                              "Don't have an account?",
+                              style: TextStyle(
+                                color: AppColors
+                                    .textSecondary,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const SignUpScreen(),
+                                  ),
+                                );
+                              },
+                              child:
+                                  const Text(
+                                'Create account',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                      ],
                     ),
-
                   ),
-
-
-
-                ],
-
-              ),
-
-            ),
-
+                ),
+              );
+            },
           ),
-
         ),
-
       ),
-
     );
-
   }
-
-
-
-
 
   @override
-  void dispose(){
-
+  void dispose() {
     _emailController.dispose();
-
     _passwordController.dispose();
 
-
     super.dispose();
-
   }
-
 }

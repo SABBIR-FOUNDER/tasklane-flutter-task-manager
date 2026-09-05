@@ -24,7 +24,12 @@ class ApiClient {
           )
           .timeout(_timeout);
 
-      return _handleResponse(response);
+      return _handleResponse(
+        response,
+        method: 'GET',
+        endpoint: endpoint,
+        requiresAuth: requiresAuth,
+      );
     } on AppException {
       rethrow;
     } on SocketException {
@@ -52,7 +57,12 @@ class ApiClient {
           )
           .timeout(_timeout);
 
-      return _handleResponse(response);
+      return _handleResponse(
+        response,
+        method: 'POST',
+        endpoint: endpoint,
+        requiresAuth: requiresAuth,
+      );
     } on AppException {
       rethrow;
     } on SocketException {
@@ -66,28 +76,42 @@ class ApiClient {
     }
   }
 
-  Future<Map<String, String>> _buildHeaders(bool requiresAuth) async {
+  Future<Map<String, String>> _buildHeaders(
+    bool requiresAuth,
+  ) async {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 
-    if (requiresAuth) {
-      final token = await StorageService.getToken();
-
-      if (token == null || token.trim().isEmpty) {
-        throw AppException(
-          'Authentication token not found. Please login again.',
-        );
-      }
-
-      headers['token'] = token.trim();
+    if (!requiresAuth) {
+      return headers;
     }
+
+    final token = await StorageService.getToken();
+
+    if (token == null || token.trim().isEmpty) {
+      throw AppException(
+        'Authentication token not found. Please login again.',
+      );
+    }
+
+    headers['token'] = token.trim();
 
     return headers;
   }
 
-  dynamic _handleResponse(http.Response response) {
+  dynamic _handleResponse(
+    http.Response response, {
+    required String method,
+    required String endpoint,
+    required bool requiresAuth,
+  }) {
+    debugPrint(
+      'API $method $endpoint '
+      '[auth=$requiresAuth] -> ${response.statusCode}',
+    );
+
     dynamic body;
 
     try {
@@ -96,47 +120,56 @@ class ApiClient {
           : jsonDecode(response.body);
     } catch (_) {
       debugPrint(
-        'API ERROR ${response.statusCode}: ${response.body}',
+        'API INVALID RESPONSE $method $endpoint: ${response.body}',
       );
+
       throw AppException(
         'Server returned an invalid response (${response.statusCode}).',
       );
     }
 
-    final bool failedHttp =
+    final failedHttp =
         response.statusCode < 200 || response.statusCode >= 300;
 
-    final String apiStatus = body is Map
+    final apiStatus = body is Map
         ? body['status']?.toString().toLowerCase() ?? ''
         : '';
 
-    final bool failedApi = const [
+    final failedApi = const [
       'fail',
       'failed',
       'error',
       'unauthorized',
     ].contains(apiStatus);
 
-    if (failedHttp || failedApi) {
-      debugPrint(
-        'API ERROR ${response.statusCode}: ${response.body}',
-      );
+    if (!failedHttp && !failedApi) {
+      return body;
+    }
 
-      if (response.statusCode == 401 || apiStatus == 'unauthorized') {
-        throw AppException(
-          'Your session is no longer valid. Please login again.',
-        );
-      }
+    debugPrint(
+      'API ERROR $method $endpoint '
+      '[auth=$requiresAuth] '
+      '${response.statusCode}: ${response.body}',
+    );
 
+    if (response.statusCode == 401 || apiStatus == 'unauthorized') {
       throw AppException(
-        _extractErrorMessage(body, response.statusCode),
+        'Unauthorized request to $endpoint. Please login again.',
       );
     }
 
-    return body;
+    throw AppException(
+      _extractErrorMessage(
+        body,
+        response.statusCode,
+      ),
+    );
   }
 
-  String _extractErrorMessage(dynamic body, int statusCode) {
+  String _extractErrorMessage(
+    dynamic body,
+    int statusCode,
+  ) {
     if (body is Map) {
       for (final key in ['data', 'message', 'error']) {
         final value = body[key];

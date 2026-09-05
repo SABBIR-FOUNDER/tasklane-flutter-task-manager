@@ -4,864 +4,493 @@ import 'package:provider/provider.dart';
 
 import '../../core/app_assets.dart';
 import '../../core/app_colors.dart';
-
 import '../../providers/auth_provider.dart';
-
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/screen_background.dart';
 
 import 'login_screen.dart';
 
-
-
 class SignUpScreen extends StatefulWidget {
-
   const SignUpScreen({
     super.key,
   });
 
-
   @override
   State<SignUpScreen> createState() =>
       _SignUpScreenState();
-
 }
-
-
 
 class _SignUpScreenState
     extends State<SignUpScreen> {
+  final TextEditingController
+      _firstNameController =
+      TextEditingController();
 
-
-
-  final TextEditingController _firstNameController =
-  TextEditingController();
-
-
-  final TextEditingController _lastNameController =
-  TextEditingController();
-
+  final TextEditingController
+      _lastNameController =
+      TextEditingController();
 
   final TextEditingController _emailController =
-  TextEditingController();
+      TextEditingController();
 
+  final TextEditingController
+      _mobileController =
+      TextEditingController();
 
-  final TextEditingController _mobileController =
-  TextEditingController();
+  final TextEditingController
+      _passwordController =
+      TextEditingController();
 
-
-  final TextEditingController _passwordController =
-  TextEditingController();
-
-
-  final TextEditingController _confirmPasswordController =
-  TextEditingController();
-
-
+  final TextEditingController
+      _confirmPasswordController =
+      TextEditingController();
 
   final GlobalKey<FormState> _formKey =
-  GlobalKey<FormState>();
-
-
+      GlobalKey<FormState>();
 
   bool _obscurePassword = true;
-
   bool _obscureConfirmPassword = true;
-
-
   bool _isLoading = false;
 
-
-
-
-  String? _validateFirstName(String? value){
-
-    if(value == null ||
-        value.trim().isEmpty){
-
+  String? _validateFirstName(
+    String? value,
+  ) {
+    if (value == null || value.trim().isEmpty) {
       return 'Please enter your first name';
-
     }
 
     return null;
-
   }
 
-
-
-  String? _validateLastName(String? value){
-
-    if(value == null ||
-        value.trim().isEmpty){
-
+  String? _validateLastName(
+    String? value,
+  ) {
+    if (value == null || value.trim().isEmpty) {
       return 'Please enter your last name';
-
     }
 
     return null;
-
   }
 
-
-
-  String? _validateMobile(String? value){
-
-    if(value == null ||
-        value.trim().isEmpty){
-
-      return 'Please enter your mobile number';
-
-    }
-
-
-    if(value.length < 10){
-
-      return 'Please enter a valid mobile number';
-
-    }
-
-
-    return null;
-
-  }
-
-
-
-
-  String? _validateEmail(String? value){
-
-    if(value == null ||
-        value.trim().isEmpty){
-
+  String? _validateEmail(
+    String? value,
+  ) {
+    if (value == null || value.trim().isEmpty) {
       return 'Please enter your email';
-
     }
 
-
-    if(!value.contains('@')){
-
+    if (!value.contains('@')) {
       return 'Please enter a valid email';
-
     }
 
-
     return null;
-
   }
 
+  String? _validateMobile(
+    String? value,
+  ) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your mobile number';
+    }
 
+    if (value.trim().length < 10) {
+      return 'Please enter a valid mobile number';
+    }
 
+    return null;
+  }
 
-
-  String? _validatePassword(String? value){
-
-    if(value == null ||
-        value.isEmpty){
-
+  String? _validatePassword(
+    String? value,
+  ) {
+    if (value == null || value.isEmpty) {
       return 'Please enter a password';
-
     }
 
-
-    if(value.length < 6){
-
+    if (value.length < 6) {
       return 'Password must contain at least 6 characters';
-
     }
 
-
     return null;
-
   }
 
-
-
-
-
-  String? _validateConfirmPassword(String? value){
-
-    if(value == null ||
-        value.isEmpty){
-
+  String? _validateConfirmPassword(
+    String? value,
+  ) {
+    if (value == null || value.isEmpty) {
       return 'Please confirm your password';
-
     }
 
-
-    if(value != _passwordController.text){
-
+    if (value != _passwordController.text) {
       return 'Passwords do not match';
-
     }
-
 
     return null;
-
   }
-
-
-
-
-
-  void _togglePasswordVisibility(){
-
-    setState(() {
-
-      _obscurePassword =
-      !_obscurePassword;
-
-    });
-
-  }
-
-
-
-
-
-  void _toggleConfirmPasswordVisibility(){
-
-    setState(() {
-
-      _obscureConfirmPassword =
-      !_obscureConfirmPassword;
-
-    });
-
-  }
-
-
-
-
-
 
   Future<void> _onTapSignUp() async {
+    FocusScope.of(context).unfocus();
 
-
-    if(!_formKey.currentState!.validate()){
-
+    if (!_formKey.currentState!.validate()) {
       return;
-
     }
 
-
-
     setState(() {
-
       _isLoading = true;
-
     });
 
+    try {
+      final success =
+          await context
+              .read<AuthProvider>()
+              .register({
+        'email':
+            _emailController.text.trim(),
+        'firstName':
+            _firstNameController.text.trim(),
+        'lastName':
+            _lastNameController.text.trim(),
+        'mobile':
+            _mobileController.text.trim(),
+        'password':
+            _passwordController.text,
+      });
 
+      if (!mounted) {
+        return;
+      }
 
+      if (!success) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Unable to create account. Please check your details and try again.',
+            ),
+          ),
+        );
 
-    final data = {
+        return;
+      }
 
-
-      "email":
-      _emailController.text.trim(),
-
-
-      "firstName":
-      _firstNameController.text.trim(),
-
-
-      "lastName":
-      _lastNameController.text.trim(),
-
-
-      "mobile":
-      _mobileController.text.trim(),
-
-
-      "password":
-      _passwordController.text,
-
-    };
-
-
-
-
-    final success =
-
-    await context
-        .read<AuthProvider>()
-        .register(
-      data,
-    );
-
-
-
-
-
-    if(!mounted){
-
-      return;
-
-    }
-
-
-
-
-
-    setState(() {
-
-      _isLoading = false;
-
-    });
-
-
-
-
-
-
-    if(success){
-
-
-      Navigator.pushReplacement(
-
-        context,
-
-        MaterialPageRoute(
-
-          builder: (_) =>
-          const LoginScreen(),
-
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Account created. Please login.',
+          ),
         ),
-
       );
 
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              const LoginScreen(),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
 
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString(),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-
   }
-
-
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
-      body:
-
-      ScreenBackground(
-
-        child:
-
-        SafeArea(
-
-          child:
-
-          SingleChildScrollView(
-
-
+      resizeToAvoidBottomInset: true,
+      body: ScreenBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            keyboardDismissBehavior:
+                ScrollViewKeyboardDismissBehavior
+                    .onDrag,
             padding:
-
-            const EdgeInsets.symmetric(
-
-              horizontal:24,
-
-              vertical:28,
-
+                const EdgeInsets.fromLTRB(
+              20,
+              12,
+              20,
+              26,
             ),
-
-
-
-            child:
-
-            Form(
-
-              key:
-              _formKey,
-
-
-
-              child:
-
-              Column(
-
+            child: Form(
+              key: _formKey,
+              child: Column(
                 crossAxisAlignment:
-
-                CrossAxisAlignment.start,
-
-
-
+                    CrossAxisAlignment
+                        .stretch,
                 children: [
-
-
-
-                  IconButton(
-
-                    onPressed:(){
-
-                      Navigator.pop(context);
-
-                    },
-
-                    icon:
-
-                    const Icon(
-                      Icons.arrow_back_rounded,
-                    ),
-
-                  ),
-
-
-
-
-                  const SizedBox(
-                    height:12,
-                  ),
-
-
-
-
-
-
-                  Center(
-
-                    child:
-
-                    SvgPicture.asset(
-
-                      AppAssets.logoMark,
-
-                      width:90,
-
-                      height:90,
-
-                    ),
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:18,
-                  ),
-
-
-
-
-
-
-                  Center(
-
-                    child:
-
-                    SvgPicture.asset(
-
-                      AppAssets.authWelcomeRoad,
-
-                      height:110,
-
-                    ),
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:24,
-                  ),
-
-
-
-
-
-                  const Text(
-
-                    'Create your account',
-
-
-                    style:
-
-                    TextStyle(
-
-                      fontSize:30,
-
-                      fontWeight:
-                      FontWeight.w700,
-
-                      color:
-                      AppColors.textPrimary,
-
-                    ),
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:8,
-                  ),
-
-
-
-
-
-                  const Text(
-
-                    'Create an account to start organizing your tasks.',
-
-
-                    style:
-
-                    TextStyle(
-
-                      fontSize:15,
-
-                      height:1.5,
-
-                      color:
-                      AppColors.textSecondary,
-
-                    ),
-
-                  ),
-
-
-
-
-
-                  const SizedBox(
-                    height:30,
-                  ),
-
-
-
-
-
-                  CustomTextField(
-
-                    controller:
-                    _firstNameController,
-
-                    labelText:
-                    'First Name',
-
-                    hintText:
-                    'Enter your first name',
-
-                    prefixIcon:
-                    Icons.person_outline,
-
-                    validator:
-                    _validateFirstName,
-
-                  ),
-
-
-
-
-
-                  CustomTextField(
-
-                    controller:
-                    _lastNameController,
-
-                    labelText:
-                    'Last Name',
-
-                    hintText:
-                    'Enter your last name',
-
-                    prefixIcon:
-                    Icons.person_outline,
-
-                    validator:
-                    _validateLastName,
-
-                  ),
-
-
-
-
-
-                  CustomTextField(
-
-                    controller:
-                    _emailController,
-
-                    labelText:
-                    'Email',
-
-                    hintText:
-                    'Enter your email',
-
-                    prefixIcon:
-                    Icons.email_outlined,
-
-                    validator:
-                    _validateEmail,
-
-                  ),
-
-
-
-
-
-                  CustomTextField(
-
-                    controller:
-                    _mobileController,
-
-                    labelText:
-                    'Mobile Number',
-
-                    hintText:
-                    'Enter your mobile number',
-
-                    prefixIcon:
-                    Icons.phone_android_outlined,
-
-                    validator:
-                    _validateMobile,
-
-                  ),
-
-
-
-
-
-                  CustomTextField(
-
-                    controller:
-                    _passwordController,
-
-                    labelText:
-                    'Password',
-
-                    hintText:
-                    'Create a password',
-
-                    prefixIcon:
-                    Icons.lock_outline_rounded,
-
-                    obscureText:
-                    _obscurePassword,
-
-                    validator:
-                    _validatePassword,
-
-
-                    suffixIcon:
-
-                    IconButton(
-
-                      onPressed:
-                      _togglePasswordVisibility,
-
-                      icon:
-
-                      Icon(
-
-                        _obscurePassword
-
-                            ? Icons.visibility_outlined
-
-                            : Icons.visibility_off_outlined,
-
-                      ),
-
-                    ),
-
-                  ),
-
-
-
-
-
-                  CustomTextField(
-
-                    controller:
-                    _confirmPasswordController,
-
-                    labelText:
-                    'Confirm Password',
-
-                    hintText:
-                    'Enter your password again',
-
-                    prefixIcon:
-                    Icons.lock_outline_rounded,
-
-                    obscureText:
-                    _obscureConfirmPassword,
-
-                    validator:
-                    _validateConfirmPassword,
-
-
-                    suffixIcon:
-
-                    IconButton(
-
-                      onPressed:
-                      _toggleConfirmPasswordVisibility,
-
-                      icon:
-
-                      Icon(
-
-                        _obscureConfirmPassword
-
-                            ? Icons.visibility_outlined
-
-                            : Icons.visibility_off_outlined,
-
-                      ),
-
-                    ),
-
-                  ),
-
-
-
-
-
-
-                  const SizedBox(
-                    height:28,
-                  ),
-
-
-
-
-
-                  PrimaryButton(
-
-                    text:
-                    'Create Account',
-
-                    isLoading:
-                    _isLoading,
-
-                    onPressed:
-                    _onTapSignUp,
-
-                  ),
-
-
-
-
-
-
-                  const SizedBox(
-                    height:20,
-                  ),
-
-
-
-
-
                   Row(
-
-                    mainAxisAlignment:
-
-                    MainAxisAlignment.center,
-
-
                     children: [
-
-
-
-                      const Text(
-
-                        'Already have an account?',
-
-
-                        style:
-
-                        TextStyle(
-
-                          color:
-                          AppColors.textSecondary,
-
-                        ),
-
-                      ),
-
-
-
-
-                      TextButton(
-
-                        onPressed:(){
-
-                          Navigator.pop(context);
-
+                      IconButton(
+                        onPressed: () {
+                          Navigator.pop(
+                            context,
+                          );
                         },
-
-                        child:
-
-                        const Text(
-
-                          'Sign in',
-
+                        icon: const Icon(
+                          Icons
+                              .arrow_back_rounded,
                         ),
-
                       ),
-
-
-
+                      Expanded(
+                        child: Center(
+                          child: SvgPicture.asset(
+                            AppAssets.wordmark,
+                            width: 185,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 48,
+                      ),
                     ],
-
                   ),
-
-
-
+                  const SizedBox(
+                    height: 18,
+                  ),
+                  const Text(
+                    'Create your account',
+                    style: TextStyle(
+                      fontSize: 27,
+                      fontWeight:
+                          FontWeight.w800,
+                      color: AppColors
+                          .textPrimary,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 6,
+                  ),
+                  const Text(
+                    'Start organizing your work and move every task forward.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.4,
+                      color: AppColors
+                          .textSecondary,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  CustomTextField(
+                    controller:
+                        _firstNameController,
+                    labelText:
+                        'First Name',
+                    hintText:
+                        'Enter first name',
+                    prefixIcon: Icons
+                        .person_outline_rounded,
+                    textCapitalization:
+                        TextCapitalization
+                            .words,
+                    textInputAction:
+                        TextInputAction.next,
+                    validator:
+                        _validateFirstName,
+                  ),
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  CustomTextField(
+                    controller:
+                        _lastNameController,
+                    labelText:
+                        'Last Name',
+                    hintText:
+                        'Enter last name',
+                    prefixIcon: Icons
+                        .person_outline_rounded,
+                    textCapitalization:
+                        TextCapitalization
+                            .words,
+                    textInputAction:
+                        TextInputAction.next,
+                    validator:
+                        _validateLastName,
+                  ),
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  CustomTextField(
+                    controller:
+                        _emailController,
+                    labelText: 'Email',
+                    hintText:
+                        'Enter your email',
+                    prefixIcon:
+                        Icons.email_outlined,
+                    keyboardType:
+                        TextInputType
+                            .emailAddress,
+                    textInputAction:
+                        TextInputAction.next,
+                    validator:
+                        _validateEmail,
+                  ),
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  CustomTextField(
+                    controller:
+                        _mobileController,
+                    labelText:
+                        'Mobile Number',
+                    hintText:
+                        'Enter mobile number',
+                    prefixIcon: Icons
+                        .phone_android_outlined,
+                    keyboardType:
+                        TextInputType.phone,
+                    textInputAction:
+                        TextInputAction.next,
+                    validator:
+                        _validateMobile,
+                  ),
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  CustomTextField(
+                    controller:
+                        _passwordController,
+                    labelText:
+                        'Password',
+                    hintText:
+                        'Create a password',
+                    prefixIcon: Icons
+                        .lock_outline_rounded,
+                    obscureText:
+                        _obscurePassword,
+                    textInputAction:
+                        TextInputAction.next,
+                    validator:
+                        _validatePassword,
+                    suffixIcon:
+                        IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword =
+                              !_obscurePassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons
+                                .visibility_outlined
+                            : Icons
+                                .visibility_off_outlined,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  CustomTextField(
+                    controller:
+                        _confirmPasswordController,
+                    labelText:
+                        'Confirm Password',
+                    hintText:
+                        'Enter password again',
+                    prefixIcon: Icons
+                        .lock_outline_rounded,
+                    obscureText:
+                        _obscureConfirmPassword,
+                    textInputAction:
+                        TextInputAction.done,
+                    validator:
+                        _validateConfirmPassword,
+                    suffixIcon:
+                        IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword =
+                              !_obscureConfirmPassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons
+                                .visibility_outlined
+                            : Icons
+                                .visibility_off_outlined,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  PrimaryButton(
+                    text: 'Create Account',
+                    isLoading:
+                        _isLoading,
+                    onPressed:
+                        _onTapSignUp,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment
+                            .center,
+                    children: [
+                      const Text(
+                        'Already have an account?',
+                        style: TextStyle(
+                          color: AppColors
+                              .textSecondary,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(
+                            context,
+                          );
+                        },
+                        child:
+                            const Text(
+                          'Sign in',
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
-
               ),
-
             ),
-
           ),
-
         ),
-
       ),
-
     );
-
   }
-
-
-
-
-
 
   @override
-  void dispose(){
-
+  void dispose() {
     _firstNameController.dispose();
-
     _lastNameController.dispose();
-
     _emailController.dispose();
-
     _mobileController.dispose();
-
     _passwordController.dispose();
-
     _confirmPasswordController.dispose();
 
-
     super.dispose();
-
   }
-
-
 }

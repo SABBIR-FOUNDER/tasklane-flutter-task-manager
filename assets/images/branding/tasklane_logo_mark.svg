@@ -5,11 +5,8 @@
     <stop offset="0.55" stop-color="#6C63FF"/>
     <stop offset="1" stop-color="#4F8EF7"/>
   </linearGradient>
-  <filter id="shadow" x="72" y="52" width="382" height="410" filterUnits="userSpaceOnUse">
-    <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#312E81" flood-opacity="0.16"/>
-  </filter>
 </defs>
-<g filter="url(#shadow)">
+<g>
   <!-- perspective road -->
   <path d="M118 418C150 334 180 274 223 224C269 170 323 132 398 92C350 154 323 204 311 253C297 308 300 357 320 418H118Z" fill="url(#road)"/>
   <!-- subtle road edge highlight -->
