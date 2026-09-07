@@ -11,7 +11,7 @@ import '../../providers/task_provider.dart';
 import '../../widgets/dashboard_header.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/task_card.dart';
-
+import '../../providers/task_timer_provider.dart';
 import '../task/create_task_screen.dart';
 import '../task/task_list_screen.dart';
 
@@ -67,6 +67,7 @@ class _DashboardScreenState
         TaskStatus.cancelled,
       ),
     ]);
+
   }
 
   Future<void> _openCreateTask() async {
@@ -205,6 +206,18 @@ class _DashboardScreenState
       task.id,
       status: task.status,
     );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (success) {
+      await context
+          .read<TaskTimerProvider>()
+          .stopTimerForTask(
+        task.id,
+      );
+    }
 
     if (!mounted) {
       return;

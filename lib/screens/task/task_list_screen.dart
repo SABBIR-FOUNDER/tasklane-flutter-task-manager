@@ -7,6 +7,7 @@ import '../../core/app_colors.dart';
 import '../../core/constants/task_status.dart';
 import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
+import '../../providers/task_timer_provider.dart';
 import '../../widgets/task_card.dart';
 
 class TaskListScreen
@@ -67,7 +68,8 @@ class _TaskListScreenState
       return;
     }
 
-    _selectedStatus = widget.status;
+    _selectedStatus =
+        widget.status;
 
     WidgetsBinding.instance
         .addPostFrameCallback((_) {
@@ -86,17 +88,21 @@ class _TaskListScreenState
   Future<void> _selectStatus(
     String status,
   ) async {
-    if (status == _selectedStatus) {
+    if (status ==
+        _selectedStatus) {
       return;
     }
 
     setState(() {
-      _selectedStatus = status;
+      _selectedStatus =
+          status;
     });
 
     await context
         .read<TaskProvider>()
-        .loadTasks(status);
+        .loadTasks(
+          status,
+        );
   }
 
   Future<void> _changeTaskStatus(
@@ -107,7 +113,8 @@ class _TaskListScreenState
         context.read<TaskProvider>();
 
     final success =
-        await provider.updateTaskStatus(
+        await provider
+            .updateTaskStatus(
       task.id,
       newStatus,
       fromStatus: task.status,
@@ -136,10 +143,14 @@ class _TaskListScreenState
     final confirmed =
         await showDialog<bool>(
       context: context,
-      builder: (dialogContext) {
+      builder: (
+        dialogContext,
+      ) {
         return AlertDialog(
           title:
-              const Text('Delete task?'),
+              const Text(
+            'Delete task?',
+          ),
           content: Text(
             'Delete "${task.title}"? '
             'This cannot be undone.',
@@ -153,7 +164,9 @@ class _TaskListScreenState
                 );
               },
               child:
-                  const Text('Cancel'),
+                  const Text(
+                'Cancel',
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -163,7 +176,9 @@ class _TaskListScreenState
                 );
               },
               child:
-                  const Text('Delete'),
+                  const Text(
+                'Delete',
+              ),
             ),
           ],
         );
@@ -183,6 +198,15 @@ class _TaskListScreenState
       task.id,
       status: task.status,
     );
+
+    if (success &&
+        mounted) {
+      await context
+          .read<TaskTimerProvider>()
+          .stopTimerForTask(
+        task.id,
+      );
+    }
 
     if (!mounted) {
       return;
@@ -207,27 +231,33 @@ class _TaskListScreenState
   ) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tasks'),
+        title:
+            const Text(
+          'Tasks',
+        ),
       ),
       body: Column(
         children: [
           Container(
-            width: double.infinity,
+            width:
+                double.infinity,
             padding:
-                const EdgeInsets.fromLTRB(
+                const EdgeInsets
+                    .fromLTRB(
               16,
               12,
               16,
               8,
             ),
-            child: const Text(
+            child:
+                const Text(
               'Filter by status',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight:
                     FontWeight.w600,
-                color:
-                    AppColors.textSecondary,
+                color: AppColors
+                    .textSecondary,
               ),
             ),
           ),
@@ -236,29 +266,41 @@ class _TaskListScreenState
             child:
                 ListView.separated(
               padding:
-                  const EdgeInsets.symmetric(
+                  const EdgeInsets
+                      .symmetric(
                 horizontal: 16,
               ),
               scrollDirection:
                   Axis.horizontal,
               itemCount:
-                  TaskStatus.values.length,
+                  TaskStatus
+                      .values.length,
               separatorBuilder:
-                  (context, index) {
+                  (
+                context,
+                index,
+              ) {
                 return const SizedBox(
                   width: 8,
                 );
               },
               itemBuilder:
-                  (context, index) {
+                  (
+                context,
+                index,
+              ) {
                 final status =
                     TaskStatus
                         .values[index];
 
                 return ChoiceChip(
-                  label: Text(status),
-                  selected: status ==
-                      _selectedStatus,
+                  label:
+                      Text(
+                    status,
+                  ),
+                  selected:
+                      status ==
+                          _selectedStatus,
                   onSelected: (_) {
                     _selectStatus(
                       status,
@@ -268,12 +310,17 @@ class _TaskListScreenState
               },
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(
+            height: 4,
+          ),
           Expanded(
             child:
                 Consumer<TaskProvider>(
-              builder:
-                  (context, provider, child) {
+              builder: (
+                context,
+                provider,
+                child,
+              ) {
                 final tasks =
                     provider.tasksFor(
                   _selectedStatus,
@@ -322,8 +369,10 @@ class _TaskListScreenState
                       physics:
                           const AlwaysScrollableScrollPhysics(),
                       padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 24,
+                          const EdgeInsets
+                              .symmetric(
+                        horizontal:
+                            24,
                       ),
                       children: [
                         const SizedBox(
@@ -340,12 +389,14 @@ class _TaskListScreenState
                         Text(
                           'No $_selectedStatus tasks',
                           textAlign:
-                              TextAlign.center,
+                              TextAlign
+                                  .center,
                           style:
                               const TextStyle(
                             fontSize: 18,
                             fontWeight:
-                                FontWeight.w700,
+                                FontWeight
+                                    .w700,
                             color: AppColors
                                 .textPrimary,
                           ),
@@ -356,8 +407,10 @@ class _TaskListScreenState
                         const Text(
                           'Tasks in this status will appear here.',
                           textAlign:
-                              TextAlign.center,
-                          style: TextStyle(
+                              TextAlign
+                                  .center,
+                          style:
+                              TextStyle(
                             color: AppColors
                                 .textSecondary,
                           ),
@@ -377,20 +430,26 @@ class _TaskListScreenState
                   child:
                       ListView.builder(
                     padding:
-                        const EdgeInsets.all(
+                        const EdgeInsets
+                            .all(
                       16,
                     ),
                     itemCount:
                         tasks.length,
                     itemBuilder:
-                        (context, index) {
+                        (
+                      context,
+                      index,
+                    ) {
                       final task =
                           tasks[index];
 
                       return TaskCard(
                         task: task,
                         onStatusChanged:
-                            (newStatus) {
+                            (
+                          newStatus,
+                        ) {
                           _changeTaskStatus(
                             task,
                             newStatus,
@@ -431,7 +490,9 @@ class _ErrorState
     return Center(
       child: Padding(
         padding:
-            const EdgeInsets.all(24),
+            const EdgeInsets.all(
+          24,
+        ),
         child: Column(
           mainAxisSize:
               MainAxisSize.min,
@@ -440,17 +501,24 @@ class _ErrorState
               AppAssets.noInternet,
               height: 120,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(
+              height: 18,
+            ),
             Text(
               message,
               textAlign:
                   TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(
+              height: 16,
+            ),
             OutlinedButton(
-              onPressed: onRetry,
+              onPressed:
+                  onRetry,
               child:
-                  const Text('Try Again'),
+                  const Text(
+                'Try Again',
+              ),
             ),
           ],
         ),
