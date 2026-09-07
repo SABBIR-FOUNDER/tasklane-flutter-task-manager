@@ -42,6 +42,8 @@ dependencies:
   audioplayers: ^6.1.0
 
 
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -98,9 +100,10 @@ flutter:
 
 
   assets:
-    - assets/images/branding/
-    - assets/images/backgrounds/
-    - assets/images/illustrations/
-    - assets/images/icons/
+  - assets/images/branding/
+  - assets/images/backgrounds/
+  - assets/images/illustrations/
+  - assets/images/icons/
+  - assets/audio/timer_complete.mp3
 
 
